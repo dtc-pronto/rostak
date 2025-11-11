@@ -1,6 +1,6 @@
 # rostak
 
-Proxy CoT messages (XML strings) between ROS and a TAK environment
+Proxy CoT messages (XML strings) between ROS 2 and a TAK environment
 
 ## Config
 
