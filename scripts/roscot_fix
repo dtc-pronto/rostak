@@ -1,6 +1,0 @@
-import rospy
-from rostak.roscot_fix import RosCotFix
-
-if __name__ == "__main__":
-    RosCotFix()
-    rospy.spin()
