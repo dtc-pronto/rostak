@@ -1,27 +1,39 @@
+
 import asyncio
 import pytak
-import rospy
+import rclpy
+from rclpy.node import Node
 from std_msgs.msg import String
 from configparser import ConfigParser
 
-class RosTakBridge:
+class RosTakBridge(Node):
     """
     Proxy CoT messages (xml strings) between ROS and TAK agents.
     """
 
     def __init__(self):
-        rospy.init_node("rostak_bridge")
+        super().__init__('rostak_bridge')
+        
+        # Declare parameters
+        self.declare_parameter('COT_URL', '')
+        self.declare_parameter('PYTAK_TLS_CLIENT_CERT', '')
+        self.declare_parameter('PYTAK_TLS_CLIENT_KEY', '')
+        self.declare_parameter('PYTAK_TLS_CLIENT_CAFILE', '')
+        self.declare_parameter('PYTAK_TLS_CLIENT_CIPHERS', '')
+        self.declare_parameter('PYTAK_TLS_DONT_VERIFY', '')
+        self.declare_parameter('PYTAK_TLS_DONT_CHECK_HOSTNAME', '')
+        
+        # Configure pytak
         self.config = ConfigParser()['DEFAULT']
-        self.config["COT_URL"] = rospy.get_param('~COT_URL', "")
-        self.config["PYTAK_TLS_CLIENT_CERT"] = rospy.get_param('~PYTAK_TLS_CLIENT_CERT', "")
-        self.config["PYTAK_TLS_CLIENT_KEY"] = rospy.get_param('~PYTAK_TLS_CLIENT_KEY', "")
-        self.config["PYTAK_TLS_CLIENT_CAFILE"] = rospy.get_param('~PYTAK_TLS_CLIENT_CAFILE', "")
-        self.config["PYTAK_TLS_CLIENT_CIPHERS"] = rospy.get_param('~PYTAK_TLS_CLIENT_CIPHERS', "")
-        self.config["PYTAK_TLS_DONT_VERIFY"] = rospy.get_param('~PYTAK_TLS_DONT_VERIFY', "")
-        self.config["PYTAK_TLS_DONT_CHECK_HOSTNAME"] = rospy.get_param('~PYTAK_TLS_DONT_CHECK_HOSTNAME', "")
+        self.config["COT_URL"] = self.get_parameter('COT_URL').value
+        self.config["PYTAK_TLS_CLIENT_CERT"] = self.get_parameter('PYTAK_TLS_CLIENT_CERT').value
+        self.config["PYTAK_TLS_CLIENT_KEY"] = self.get_parameter('PYTAK_TLS_CLIENT_KEY').value
+        self.config["PYTAK_TLS_CLIENT_CAFILE"] = self.get_parameter('PYTAK_TLS_CLIENT_CAFILE').value
+        self.config["PYTAK_TLS_CLIENT_CIPHERS"] = self.get_parameter('PYTAK_TLS_CLIENT_CIPHERS').value
+        self.config["PYTAK_TLS_DONT_VERIFY"] = self.get_parameter('PYTAK_TLS_DONT_VERIFY').value
+        self.config["PYTAK_TLS_DONT_CHECK_HOSTNAME"] = self.get_parameter('PYTAK_TLS_DONT_CHECK_HOSTNAME').value
         
     async def run(self):
-
         # connect to tak server
         try:
             rx_proto, tx_proto = await pytak.protocol_factory(self.config)
@@ -33,11 +45,11 @@ class RosTakBridge:
         if tx_proto:
             tx_queue = asyncio.Queue()
             tasks.append(pytak.TXWorker(tx_queue, self.config, tx_proto).run())
-            tasks.append(RosCotWorker(tx_queue, self.config).run())
+            tasks.append(RosCotWorker(tx_queue, self.config, self).run())
 
         if rx_proto:
             rx_queue = asyncio.Queue()
-            tasks.append(RosTakReceiver(rx_queue, self.config, rx_proto).run())
+            tasks.append(RosTakReceiver(rx_queue, self.config, rx_proto, self).run())
 
         # start workers, restart on error
         while True:
@@ -47,14 +59,15 @@ class RosTakBridge:
             )
 
             for task in done:
-                rospy.loginfo(f"Task completed: {task}")
+                print(f"[RosTakBridge] Task Completed: {task}")
     
 class RosCotWorker(pytak.QueueWorker):
     """
     listen for CoT from ROS and enqueue for TAK
     """
-    def __init__(self, queue: asyncio.Queue, config: dict) -> None:
+    def __init__(self, queue: asyncio.Queue, config: dict, node: Node) -> None:
         super().__init__(queue, config)
+        self.node = node
         self.aio = asyncio.get_event_loop()
 
     def queue_cotmsg(self, cotmsg):
@@ -63,28 +76,43 @@ class RosCotWorker(pytak.QueueWorker):
         )
     
     async def run(self):
-        rospy.loginfo(" *** Subscribing to tak_tx ***")
-        rospy.Subscriber("tak_tx", String, self.queue_cotmsg)
-        # TODO: better way to keep async worker running so ROS callback threading continues
-        while True:
+        self.node.get_logger().info(" *** Subscribing to tak_tx ***")
+        self.node.create_subscription(String, "tak_tx", self.queue_cotmsg, 10)
+        # Keep async worker running so ROS callback threading continues
+        while rclpy.ok():
             await asyncio.sleep(0.25)
     
 class RosTakReceiver(pytak.RXWorker):
     """
     receive CoT from TAK and publish to ROS
     """
-    def __init__(self, queue: asyncio.Queue, config: dict, reader: asyncio.Protocol) -> None:
+    def __init__(self, queue: asyncio.Queue, config: dict, reader: asyncio.Protocol, node: Node) -> None:
         super().__init__(queue, config, reader)
+        self.node = node
 
     async def run(self):
-        pub = rospy.Publisher('tak_rx', String, queue_size=10)
+        pub = self.node.create_publisher(String, 'tak_rx', 10)
         msg = String()
-        rospy.loginfo(" *** Publishing on tak_rx ***")
-        while True:
+        self.node.get_logger().info(" *** Publishing on tak_rx ***")
+        while rclpy.ok():
             cot = await self.reader.readuntil(separator=b'</event>')
             msg.data = cot.decode()
             pub.publish(msg)
 
-if __name__ == '__main__':
+async def main_async():
+    rclpy.init()
     bridge = RosTakBridge()
-    asyncio.run(bridge.run())
+    
+    try:
+        await bridge.run()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        bridge.destroy_node()
+        rclpy.shutdown()
+
+def main(): 
+    asyncio.run(main_async())
+
+if __name__ == '__main__':
+    main()
