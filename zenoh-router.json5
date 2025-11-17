@@ -1,0 +1,20 @@
+{
+  mode: "router",
+  
+  shared_memory: {
+    enabled: true,
+  },
+  
+  listen: {
+    endpoints: [
+      "tcp/localhost:7447",
+    ],
+  },
+  
+  plugins: {
+    rest: {
+      http_port: 8005,  // REST API port
+    },
+    
+  },
+}

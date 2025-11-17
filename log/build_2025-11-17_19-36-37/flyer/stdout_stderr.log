@@ -1,0 +1,24 @@
+running egg_info
+creating build/flyer/rostak.egg-info
+writing build/flyer/rostak.egg-info/PKG-INFO
+writing dependency_links to build/flyer/rostak.egg-info/dependency_links.txt
+writing requirements to build/flyer/rostak.egg-info/requires.txt
+writing top-level names to build/flyer/rostak.egg-info/top_level.txt
+writing manifest file 'build/flyer/rostak.egg-info/SOURCES.txt'
+reading manifest file 'build/flyer/rostak.egg-info/SOURCES.txt'
+writing manifest file 'build/flyer/rostak.egg-info/SOURCES.txt'
+running build
+running install
+running install_data
+copying resource/rostak -> /home/dtc/ws/ros2tak/install/flyer/share/ament_index/resource_index/packages
+creating /home/dtc/ws/ros2tak/install/flyer/share/rostak
+copying package.xml -> /home/dtc/ws/ros2tak/install/flyer/share/rostak
+creating /home/dtc/ws/ros2tak/install/flyer/share/rostak/launch
+copying launch/rostak.launch.py -> /home/dtc/ws/ros2tak/install/flyer/share/rostak/launch
+creating /home/dtc/ws/ros2tak/install/flyer/share/rostak/config
+copying config/tak.yaml -> /home/dtc/ws/ros2tak/install/flyer/share/rostak/config
+copying config/cot.yaml -> /home/dtc/ws/ros2tak/install/flyer/share/rostak/config
+running install_egg_info
+Copying build/flyer/rostak.egg-info to /home/dtc/ws/ros2tak/install/flyer/lib/python3.12/site-packages/rostak-0.0.1-py3.12.egg-info
+running install_scripts
+writing list of installed files to '/home/dtc/ws/ros2tak/build/flyer/install.log'

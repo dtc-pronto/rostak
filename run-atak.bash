@@ -1,0 +1,17 @@
+#!/bin/bash
+
+xhost +
+docker run -it --rm \
+    --network=host \
+    --ipc=host \
+    --privileged \
+    -v "/dev:/dev" \
+    -v "/tmp/.X11-unix:/tmp/.X11-unix" \
+    -v "/home/yifan/Dockers/rostak:/home/dtc/ws/ros2tak" \
+    -e DISPLAY=$DISPLAY \
+    -e QT_X11_NO_MITSHM=1 \
+    -e XAUTHORITY=$XAUTH \
+    --name dtc-ros-jazzy-atak \
+    ros-jazzy:atak \
+    bash
+xhost -
