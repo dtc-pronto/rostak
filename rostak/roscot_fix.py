@@ -3,6 +3,7 @@ from rclpy.node import Node
 from rostak.cot_utility import CotUtility
 from std_msgs.msg import String
 from sensor_msgs.msg import NavSatFix
+from rclpy.executors import SingleThreadedExecutor
 
 class RosCotFix(Node):
 
@@ -19,10 +20,10 @@ class RosCotFix(Node):
 
         self.pub_ = self.create_publisher(String, "tak_tx", 1)
 
-        self.create_subscription(NavSatFix, "fix", self.fix_callback)
-        self.get_logger().info(self.util_.get_config())
+        self.create_subscription(NavSatFix, "fix", self.fix_callback, 1)
+        #self.get_logger().info(self.util_.get_config())
 
-    def fix_callback(msg : NavSatFix) -> None:
+    def fix_callback(self, msg : NavSatFix) -> None:
         """Generate a status COT event"""
         self.util_.set_point(msg)
         stale_in = 2 * max(1, 1 / self.rate_)
@@ -32,11 +33,14 @@ class RosCotFix(Node):
 def main(args=None) -> None:
     rclpy.init()
     fix = RosCotFix()
+    
+    executor = SingleThreadedExecutor()
+    executor.add_node(fix)
 
     try:
-        fix.spin()
+        executor.spin()
     finally:
-        fix.shutdown()
+        executor.shutdown()
         fix.destroy_node()
         rclpy.shutdown()
 

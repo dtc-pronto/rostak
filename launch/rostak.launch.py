@@ -64,7 +64,7 @@ def generate_launch_description():
     
     # Group nodes under 'tak' namespace
     tak_group = GroupAction([
-        PushRosNamespace('tak'),
+        #PushRosNamespace('tak'),
         rostak_bridge_node,
         roscot_fix_node,
     ])

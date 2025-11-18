@@ -23,7 +23,8 @@ setup(
     license='TODO: License declaration',
     entry_points={
         'console_scripts': [
-            '',
+            'rostak_bridge = rostak.rostak_bridge:main',
+            'roscot_fix = rostak.roscot_fix:main',
         ],
     },
 )
