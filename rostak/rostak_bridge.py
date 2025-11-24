@@ -44,12 +44,12 @@ class RosTakBridge(Node):
         tasks = []
         if tx_proto:
             tx_queue = asyncio.Queue()
-            tasks.append(pytak.TXWorker(tx_queue, self.config, tx_proto).run())
-            tasks.append(RosCotWorker(tx_queue, self.config, self).run())
+            tasks.append(asyncio.create_task(pytak.TXWorker(tx_queue, self.config, tx_proto).run()))
+            tasks.append(asyncio.create_task(RosCotWorker(tx_queue, self.config, self).run()))
 
         if rx_proto:
             rx_queue = asyncio.Queue()
-            tasks.append(RosTakReceiver(rx_queue, self.config, rx_proto, self).run())
+            tasks.append(asyncio.create_task(RosTakReceiver(rx_queue, self.config, rx_proto, self).run()))
 
         # start workers, restart on error
         while True:

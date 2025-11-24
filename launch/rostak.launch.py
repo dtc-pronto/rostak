@@ -46,7 +46,6 @@ def generate_launch_description():
         name='rostak_bridge',
         output='screen',
         parameters=[tak_params],
-        env={'DEBUG': 'false'}
     )
     
     roscot_fix_node = Node(

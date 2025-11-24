@@ -3,3 +3,4 @@
 **/*.pyc
 **/certs
 **/log
+certs.zip
