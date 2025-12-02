@@ -1,7 +1,7 @@
-rostak_bridge:
+/tak/rostak_bridge:
   ros__parameters:
     # COT_URL: udp://239.2.3.1:6969 # ATAK default multicast
-    COT_URL: tls://host:8089
+    COT_URL: udp://127.0.0.1:8080
     # COT_URL: stcp://host:8088
     # COT_URL: tcp://host:8087
     # COT_URL: udp://host:8087

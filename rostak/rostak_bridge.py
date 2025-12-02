@@ -15,7 +15,7 @@ class RosTakBridge(Node):
         super().__init__('rostak_bridge')
         
         # Declare parameters
-        self.declare_parameter('COT_URL', '')
+        self.declare_parameter('COT_URL', 'udp://127.0.0.1:8089')
         self.declare_parameter('PYTAK_TLS_CLIENT_CERT', '')
         self.declare_parameter('PYTAK_TLS_CLIENT_KEY', '')
         self.declare_parameter('PYTAK_TLS_CLIENT_CAFILE', '')
@@ -44,12 +44,12 @@ class RosTakBridge(Node):
         tasks = []
         if tx_proto:
             tx_queue = asyncio.Queue()
-            tasks.append(pytak.TXWorker(tx_queue, self.config, tx_proto).run())
-            tasks.append(RosCotWorker(tx_queue, self.config, self).run())
+            tasks.append(asyncio.create_task(pytak.TXWorker(tx_queue, self.config, tx_proto).run()))
+            tasks.append(asyncio.create_task(RosCotWorker(tx_queue, self.config, self).run()))
 
         if rx_proto:
             rx_queue = asyncio.Queue()
-            tasks.append(RosTakReceiver(rx_queue, self.config, rx_proto, self).run())
+            tasks.append(asyncio.create_task(RosTakReceiver(rx_queue, self.config, rx_proto, self).run()))
 
         # start workers, restart on error
         while True:
@@ -58,8 +58,8 @@ class RosTakBridge(Node):
                 return_when=asyncio.FIRST_COMPLETED
             )
 
-            for task in done:
-                print(f"[RosTakBridge] Task Completed: {task}")
+            #for task in done:
+            #    print(f"[RosTakBridge] Task Completed: {task}")
     
 class RosCotWorker(pytak.QueueWorker):
     """
@@ -100,7 +100,6 @@ class RosTakReceiver(pytak.RXWorker):
             pub.publish(msg)
 
 async def main_async():
-    rclpy.init()
     bridge = RosTakBridge()
     
     try:
@@ -111,7 +110,8 @@ async def main_async():
         bridge.destroy_node()
         rclpy.shutdown()
 
-def main(): 
+def main():
+    rclpy.init()
     asyncio.run(main_async())
 
 if __name__ == '__main__':
