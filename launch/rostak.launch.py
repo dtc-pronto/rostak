@@ -16,7 +16,7 @@ def generate_launch_description():
         'tak.yaml'
     ])
 
-    cot_params_path = PathJoinSubstitution([
+    cot_params = PathJoinSubstitution([
         FindPackageShare('rostak'),
         'config',
         'cot.yaml'
@@ -52,6 +52,7 @@ def generate_launch_description():
         name='rostak_bridge',
         output='screen',
         parameters=[tak_params],
+        # env={'DEBUG': 'false'}
     )
     
     roscot_fix_node = Node(
@@ -60,7 +61,7 @@ def generate_launch_description():
         name='roscot_fix',
         output='screen',
         parameters=[{
-            'cot_params': cot_params_path,
+            'cot_params': cot_params,
             'rate': fix_rate
         }],
         remappings=[('fix', 'fix')]
