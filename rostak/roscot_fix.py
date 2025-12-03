@@ -28,7 +28,7 @@ class RosCotFix(Node):
         self.util_.set_point(msg)
         stale_in = 2 * max(1, 1 / self.rate_)
         self.msg_.data = self.util_.new_status_msg(stale_in)
-        self.pub_.publish(self.msg)
+        self.pub_.publish(self.msg_)
 
 def main(args=None) -> None:
     rclpy.init()

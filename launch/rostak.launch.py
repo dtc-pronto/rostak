@@ -8,23 +8,29 @@ from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
+
+
+    tak_params = PathJoinSubstitution([
+        FindPackageShare('rostak'),
+        'config',
+        'tak.yaml'
+    ])
+
+    cot_params_path = PathJoinSubstitution([
+        FindPackageShare('rostak'),
+        'config',
+        'cot.yaml'
+    ])
+
     tak_params_arg = DeclareLaunchArgument(
         'tak_params',
-        default_value=PathJoinSubstitution([
-            FindPackageShare('rostak'),
-            'config',
-            'tak.yaml'
-        ]),
+        default_value=tak_params,
         description='Path to TAK parameters file'
     )
 
     cot_params_arg = DeclareLaunchArgument(
         'cot_params',
-        default_value=PathJoinSubstitution([
-            FindPackageShare('rostak'),
-            'config',
-            'cot.yaml'
-        ]),
+        default_value=cot_params,
         description='Path to CoT parameters file'
     )
      
@@ -54,7 +60,7 @@ def generate_launch_description():
         name='roscot_fix',
         output='screen',
         parameters=[{
-            'cot_params': cot_params,
+            'cot_params': cot_params_path,
             'rate': fix_rate
         }],
         remappings=[('fix', 'fix')]
@@ -63,7 +69,7 @@ def generate_launch_description():
     
     # Group nodes under 'tak' namespace
     tak_group = GroupAction([
-        #PushRosNamespace('tak'),
+        PushRosNamespace('tak'),
         rostak_bridge_node,
         roscot_fix_node,
     ])
