@@ -42,6 +42,10 @@ class RosTakBridge(Node):
 
         # bridge objects
         tasks = []
+
+            # ROS spinning task
+        tasks.append(asyncio.create_task(self.spin_ros()))
+
         if tx_proto:
             tx_queue = asyncio.Queue()
             tasks.append(asyncio.create_task(pytak.TXWorker(tx_queue, self.config, tx_proto).run()))
@@ -60,6 +64,16 @@ class RosTakBridge(Node):
 
             #for task in done:
             #    print(f"[RosTakBridge] Task Completed: {task}")
+
+    # Added Ros Spinning Task
+    async def spin_ros(self):
+        """
+        Periodically spin the ROS node to process callbacks (subscriptions).
+        """
+        while rclpy.ok():
+            # We use 0 or small timeout to prevent blocking the asyncio loop
+            rclpy.spin_once(self, timeout_sec=0.01)
+            await asyncio.sleep(0.01)
     
 class RosCotWorker(pytak.QueueWorker):
     """
