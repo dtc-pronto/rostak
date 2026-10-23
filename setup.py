@@ -7,7 +7,8 @@ package_name = 'rostak'
 setup(
     name=package_name,
     version='0.0.1',
-    packages=find_packages(exclude=['test']),
+    packages=find_packages(where='src'),
+    package_dir={'': 'src'},
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
@@ -15,7 +16,7 @@ setup(
         (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
         (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
     ],
-    install_requires=['setuptools'],
+    install_requires=['setuptools', 'PyYAML'],
     zip_safe=True,
     maintainer='jason',
     maintainer_email='jason@todo.todo',
@@ -23,7 +24,8 @@ setup(
     license='TODO: License declaration',
     entry_points={
         'console_scripts': [
-            '',
+            'rostak_bridge = rostak.rostak_bridge:main',
+            'roscot_fix = rostak.roscot_fix:main',
         ],
     },
 )

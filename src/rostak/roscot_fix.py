@@ -1,44 +1,43 @@
+"""Convert sensor_msgs/NavSatFix into CoT events on tak_tx."""
+import os
 import rclpy
 from rclpy.node import Node
-from rostak.cot_utility import CotUtility
-from std_msgs.msg import String
+from rclpy.qos import qos_profile_sensor_data
+from ament_index_python.packages import get_package_share_directory
 from sensor_msgs.msg import NavSatFix
+from std_msgs.msg import String
+from rostak.cot_utility import CotUtility
+
 
 class RosCotFix(Node):
+    def __init__(self):
+        super().__init__('roscot_fix')
+        default_config = os.path.join(get_package_share_directory('rostak'), 'config', 'cot.yaml')
+        config = self.declare_parameter('cot_params', default_config).value
+        self.util = CotUtility(config)
+        self.stale_seconds = self.declare_parameter('stale_seconds', 300.0).value
+        self.tx = self.create_publisher(String, 'tak_tx', 10)
+        self.subscription = self.create_subscription(
+            NavSatFix, 'fix', self.fix_callback, qos_profile_sensor_data)
+        self.get_logger().info(f'GPS → CoT: {self.util.callsign}')
 
-    def __init__(self) -> None:
-        super().__init__("rostak_fix")
-        self.declare_parameter("cot_params","./")
-        config_path = self.get_parameter("cot_params").value
-        self.util_ = CotUtility(config_path)
-        
-        self.declare_parameter("rate", 0.2)
-        self.rate_ = self.get_parameter("rate").value
+    def fix_callback(self, msg):
+        try:
+            self.util.set_point(msg)
+            self.tx.publish(String(data=self.util.new_status_msg(self.stale_seconds)))
+            self.get_logger().info(f'Published {self.util.callsign}: {msg.latitude}, {msg.longitude}')
+        except ValueError as exc:
+            self.get_logger().warning(f'Ignoring invalid GPS fix: {exc}')
 
-        self.msg_ = String()
 
-        self.pub_ = self.create_publisher(String, "tak_tx", 1)
-
-        self.create_subscription(NavSatFix, "fix", self.fix_callback)
-        self.get_logger().info(self.util_.get_config())
-
-    def fix_callback(msg : NavSatFix) -> None:
-        """Generate a status COT event"""
-        self.util_.set_point(msg)
-        stale_in = 2 * max(1, 1 / self.rate_)
-        self.msg_.data = self.util_.new_status_msg(stale_in)
-        self.pub_.publish(self.msg)
-
-def main(args=None) -> None:
-    rclpy.init()
-    fix = RosCotFix()
-
+def main(args=None):
+    rclpy.init(args=args)
+    node = RosCotFix()
     try:
-        fix.spin()
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
     finally:
-        fix.shutdown()
-        fix.destroy_node()
-        rclpy.shutdown()
-
-if __name__ == "__main__":
-    main()
+        node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()

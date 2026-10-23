@@ -1,7 +1,7 @@
-callsign: callsign
+callsign: ROS2-Robot
 uid: edu.westpoint.rrc.callsign
 team: Cyan
 role: Team Member
-type: a-f-G-E-V-ugv
+type: a-f-G-E-V
 radius: 2.0
 height: 2.0
