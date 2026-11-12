@@ -73,8 +73,8 @@ class CotUtility:
 
     def set_icon(self, icon):
         self.iconpath = icon
-        self.injury_grade = {'noun-person-red.png': 3, 'noun-person-yellow.png': 2,
-                             'noun-person-green.png': 1, 'noun-person-black.png': 0}.get(icon)
+        self.injury_grade = {'person-red.png': 3, 'person-yellow.png': 2,
+                             'person-green.png': 1, 'person-black.png': 0}.get(icon)
 
     def get_config(self):
         return self.cfg
